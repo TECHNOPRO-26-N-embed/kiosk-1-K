@@ -61,7 +61,7 @@ int main(void)
 
     VendingState current_state = STATE_INSERT_MONEY;
 
-    int button_pressed =
+    //int button_pressed =
     
     return 0;
 } 
