@@ -45,12 +45,6 @@ int TonyuKingaku(int moto) {
     return moto;
 }
 
-int Inventory_management(int product_id, int quantity) {
-    // 商品の在庫管理のロジックをここに実装
-    
-    return 0;
-}
-
 // 商品情報の構造体
 typedef struct{
     int id;     // 商品ID
@@ -85,6 +79,13 @@ void loadMenu(Product menu[]);
 void printMenu(Product menu[], int balance);
 void saveCSV(Product purchased_item);
 
+void Inventory_management(int product_id, Product menu[]) {
+    // 商品の在庫管理のロジックをここに実装
+    // 例: 在庫を減らす
+    menu[product_id].stock -= 1; 
+}
+
+
 int main(void)
 {
 	Product menu[TOTAL_PRODUCTS];
@@ -102,58 +103,7 @@ int main(void)
 
     VendingState current_state = STATE_INSERT_MONEY;
 
-    int button_pressed = 0;
-    int user_input = 0;
-    int target_index = -1;
-
-    printf("自動販売機へようこそ！\n");
-
-    while(1)
-    {
-        swith (current_state)
-        {
-            case STATE_INSERT_MONEY:
-                printf("\n===============================\n");
-                printf("[現在投入残高: %d円] (※最大10000円まで)\n", machine.current);
-                printf("投入ボタンを選んでください:\n");
-                printf("1: [10円] 2: [50円] 3: [100円] 4: [500円] 5: [1000円] 6: [投入終了]\n");
-                printf("===============================\n");
-                printf("選択: ");
-
-                if(scanf("%d", &button_pressed) != 1)
-                {
-                    printf("無効な入力です。もう一度選択してください。\n");
-                    while(getchar() != '\n'); // 入力バッファをクリア
-                    continue;
-                }
-
-                int added_amount = 0;
-
-                switch (button_pressed)
-                {
-                    case 1: added_amount = 10; break;
-                    case 2: added_amount = 50; break;
-                    case 3: added_amount = 100; break;
-                    case 4: added_amount = 500; break;
-                    case 5: added_amount = 1000; break;
-
-                    case 6: 
-                        if(machine.current == 0)
-                        {
-                            printf("投入を終了します。現在の残高は %d円です。\n", machine.current);
-                        }
-                        else
-                        {
-                            printf("投入が完了しました。\n");
-                        }
-                        current_state = STATE_PRINT_MENU;
-                        continue;
-                    default:
-                        printf("無効な選択です。もう一度選択してください。\n");
-                        continue;
-                }
-        }
-    }
+    //int button_pressed =
     
     return 0;
 } 
