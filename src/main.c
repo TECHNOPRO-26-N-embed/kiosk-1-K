@@ -298,6 +298,15 @@ int main(void)
                         if(return_10 > 0) printf("10円硬貨: %d枚\n", return_10);
 
                         if(changeReturn > 0)
+                        {
+                            printf("申し訳ありませんが、十分なお釣りを返すことができません。残りのお釣り: %d円\n", changeReturn);
+                            printf("管理者にお問合せください。\n");
+                        }
+                        else{
+                            printf("お釣りを返しました。ありがとうございました！\n");
+                        }
+                        
+                        machine.current = 0; // 残高をリセット
                         current_state = STATE_INSERT_MONEY;
                         break;
         }
