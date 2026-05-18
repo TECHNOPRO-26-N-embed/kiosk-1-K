@@ -83,7 +83,16 @@ void saveCSV(Product purchased_item);
 void Inventory_management(int product_id, Product menu[]) {
     // 商品の在庫管理のロジックをここに実装
     // 例: 在庫を減らす
-    menu[product_id].stock -= 1; 
+    if (menu[product_id].stock > 0)// 在庫がある場合のみ減らす
+    {
+        menu[product_id].stock -= 1; 
+        printf("商品ID %d の在庫が減りました。残り在庫: %d\n", product_id, menu[product_id].stock);
+    }
+    else if(menu[product_id].stock == 0)
+    {
+        // 在庫がない場合の処理(売り切れ表示をするなど)
+        printf("商品ID %d の在庫がありません。\n", product_id);
+    }
 }
 
 
@@ -92,7 +101,7 @@ int main(void)
 	Product menu[TOTAL_PRODUCTS];
 //    loadMenu(menu);
 
-    VendingMachine machine = {
+    VendingMachine VendingMachine = {
         .current = 0,
         .total = 0,
         .coin_10 = 100,
@@ -110,6 +119,104 @@ int main(void)
     VendingState current_state = STATE_INSERT_MONEY;
 
 
+    printf("自動販売機へようこそ！\n");
+
+    while(1)
+    {
+        switch (current_state)
+        {
+            case STATE_INSERT_MONEY:
+                printf("\n===============================\n");
+                printf("[現在投入残高: %d円] (※最大10000円まで)\n", machine.current);
+                printf("投入ボタンを選んでください:\n");
+                printf("1: [10円] 2: [50円] 3: [100円] 4: [500円] 5: [1000円] 6: [投入終了]\n");
+                printf("===============================\n");
+                printf("選択: ");
+
+                if(scanf("%d", &button_pressed) != 1)
+                {
+                    printf("無効な入力です。もう一度選択してください。\n");
+                    while(getchar() != '\n'); // 入力バッファをクリア
+                    continue;
+                }
+
+                int added_amount = 0;
+
+                switch (button_pressed)
+                {
+                    case 1: added_amount = 10; break;
+                    case 2: added_amount = 50; break;
+                    case 3: added_amount = 100; break;
+                    case 4: added_amount = 500; break;
+                    case 5: added_amount = 1000; break;
+
+                    case 6: 
+                        if(machine.current == 0)
+                        {
+                            printf("お金を先に入れてください。\n");
+                        }
+                        else
+                        {
+                            current_state = STATE_PRINT_MENU;
+                        }
+                        
+                        continue;
+                    case 7:
+                        current_state = STATE_GIVE_CHANGE;
+                        continue;
+                    default:
+                        printf("無効な選択です。もう一度選択してください。\n");
+                        continue;
+                }
+                if(machine.current + added_amount > 10000)
+                {
+                    printf("これ以上投入できません。最大投入金額は10000円です。\n");
+                }
+                else
+                {
+                    machine.current += added_amount;
+                    printf("%d円を投入しました。現在の残高: %d円\n", added_amount, machine.current);
+                }
+                break;
+
+                case STATE_PRINT_MENU:
+                    printMenu("購入する商品番号(1~%d)を選んでください（お金をもっと入れる場合は0を入力）:\n", TOTAL_PRODUCTS);
+
+                    if(scanf("%d", &user_input) != 1)
+                    {
+                        printf("無効な入力です。もう一度選択してください。\n");
+                        while(getchar() != '\n'); // 入力バッファをクリア
+                        break;
+                    }
+
+                    if(user_input == 0)
+                    {
+                        current_state = STATE_INSERT_MONEY;
+                        break;
+                    }
+                    else if(user_input < 1 || user_input > TOTAL_PRODUCTS)
+                    {
+                        printf("無効な商品番号です。もう一度選択してください。\n");
+                    }
+                    
+                    target_index = user_input - 1; // 商品番号は1から始まるため、インデックスは-1する
+
+                    if(menu[target_index].stock <= 0)
+                    {
+                        printf("申し訳ありませんが、%sは在庫切れです。\n", menu[target_index].name);
+                    }
+                    if(machine.current < menu[target_index].price)
+                    {
+                        printf("残高が不足しています。%sの価格は%d円ですが、現在の残高は%d円です。\n", menu[target_index].name, menu[target_index].price, machine.current);
+                    }
+                    
+                    current_state = STATE_DISPENSE_PRODUCT;
+                    
+                    break;
+                    current_state = STATE_SELECT_MENU;
+                    break;
+        }
+    }
     
     return 0;
 } 
