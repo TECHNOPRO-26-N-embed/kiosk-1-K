@@ -63,14 +63,22 @@ typedef struct{
 typedef struct{
     int current;    // 消費者が投入した金額
     int total;      // 売上金額
+
+    // 硬貨と紙幣の在庫
+    int coin_10;    // 10円硬貨の在庫
+    int coin_50;    // 50円硬貨の在庫
+    int coin_100;   // 100円硬貨の在庫
+    int coin_500;   // 500円硬貨の在庫
+    int bill_1000;  // 1000円紙幣の在庫
 } VendingMachine;
 
-typedef struct{
-    STATE_INSERT_MONEY;
-    STATE_PRINT_MENU;
-    STATE_SELECT_MENU;
-    STATE_DISPENSE_PRODUCT;
-    STATE_GIVE_CHANGE;
+// 自販機の状態を表す列挙型
+typedef enum {
+    STATE_INSERT_MONEY,     // お金を投入する状態
+    STATE_PRINT_MENU,       // メニューを表示する状態
+    STATE_SELECT_MENU,      // メニューを選択する状態
+    STATE_DISPENSE_PRODUCT, // 商品を提供する状態
+    STATE_GIVE_CHANGE   // お釣りを返す状態
 } VendingState;
 
 void loadMenu(Product menu[]);
@@ -82,8 +90,19 @@ int main(void)
 {
 	Product menu[TOTAL_PRODUCTS];
     loadMenu(menu);
-    printf("合計金額: %d円\n", TonyuKingaku(0));
 
+    VendingMachine VendingMachine = {
+        .current = 0,
+        .total = 0,
+        .coin_10 = 100,
+        .coin_50 = 100,
+        .coin_100 = 100,
+        .coin_500 = 100,
+        .bill_1000 = 100
+    };
+
+
+    VendingState current_state = STATE_INSERT_MONEY;
     
     return 0;
 } 
