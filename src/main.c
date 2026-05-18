@@ -142,14 +142,12 @@ int main(void)
 
     VendingState current_state = STATE_INSERT_MONEY;
 
-     //スタートメニュー呼び出し0518(岩野)
-     //StartMenu();
-
     int button_pressed = 0;
     int user_input = 0;
     int target_index = -1;
 
-    printf("自動販売機へようこそ！\n");
+    //スタートメニュー呼び出し0518(岩野)
+    StartMenu();
 
     while(1)
     {
@@ -172,6 +170,7 @@ int main(void)
 
                 int added_amount = 0;
 
+                // ボタン入力による金額の追加と状態遷移の処理
                 switch (button_pressed)
                 {
                     case 1: added_amount = 10; break;
@@ -180,6 +179,7 @@ int main(void)
                     case 4: added_amount = 500; break;
                     case 5: added_amount = 1000; break;
 
+                    // 投入終了ボタンが押された場合の処理
                     case 6: 
                         if(machine.current == 0)
                         {
@@ -191,6 +191,7 @@ int main(void)
                         }
                         
                         continue;
+                    // お釣り返却ボタンが押された場合の処理
                     case 7:
                         current_state = STATE_GIVE_CHANGE;
                         continue;
@@ -198,6 +199,8 @@ int main(void)
                         printf("無効な選択です。もう一度選択してください。\n");
                         continue;
                 }
+
+                // 金額の追加前に最大投入金額を超えないか確認
                 if(machine.current + added_amount > 10000)
                 {
                     printf("これ以上投入できません。最大投入金額は10000円です。\n");
@@ -208,8 +211,14 @@ int main(void)
                     printf("%d円を投入しました。現在の残高: %d円\n", added_amount, machine.current);
                 }
                 break;
-
+                
+                // メニュー表示と選択の処理
                 case STATE_PRINT_MENU:
+                    printMenu(menu, machine.current);
+                    current_state = STATE_SELECT_MENU;
+                    break;
+
+                case STATE_SELECT_MENU:
                     printMenu("購入する商品番号(1~%d)を選んでください（お金をもっと入れる場合は0を入力）:\n", TOTAL_PRODUCTS);
 
                     if(scanf("%d", &user_input) != 1)
@@ -243,6 +252,7 @@ int main(void)
                     current_state = STATE_DISPENSE_PRODUCT;
                     break;
                     
+                    // 商品提供と在庫管理の処理
                     case STATE_DISPENSE_PRODUCT:
                         printf("%sを提供しています...\n", menu[target_index].name);
                         machine.current -= menu[target_index].price;
@@ -253,11 +263,13 @@ int main(void)
                         current_state = STATE_PRINT_MENU;
                         break;
 
+                    // お釣り返却の処理
                     case STATE_GIVE_CHANGE:
                         printf("お釣りを返しています...\n");
                         printf("お釣り: %d円\n", machine.current);
                         int changeReturn = machine.current;
 
+                        // お釣りを返すためのループ
                         int return_1000 = 0, return_500 = 0, return_100 = 0, return_50 = 0, return_10 = 0;
                         while(changeReturn >= 1000 && machine.bill_1000 > 0)
                         {
@@ -290,6 +302,7 @@ int main(void)
                             return_10++;
                         }
 
+                        // 返却するお釣りの内訳を表示
                         if(return_1000 > 0) printf("お釣り: %d円\n", machine.current);
                         if(return_1000 > 0) printf("1000円札: %d枚\n", return_1000);
                         if(return_500 > 0) printf("500円硬貨: %d枚\n", return_500);
@@ -297,6 +310,7 @@ int main(void)
                         if(return_50 > 0) printf("50円硬貨: %d枚\n", return_50);
                         if(return_10 > 0) printf("10円硬貨: %d枚\n", return_10);
 
+                        // お釣りを完全に返せなかった場合の対応
                         if(changeReturn > 0)
                         {
                             printf("申し訳ありませんが、十分なお釣りを返すことができません。残りのお釣り: %d円\n", changeReturn);
