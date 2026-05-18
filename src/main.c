@@ -22,6 +22,13 @@ typedef struct{
 typedef struct{
     int current;    // 消費者が投入した金額
     int total;      // 売上金額
+
+    // 硬貨と紙幣の在庫
+    int coin_10;    // 10円硬貨の在庫
+    int coin_50;    // 50円硬貨の在庫
+    int coin_100;   // 100円硬貨の在庫
+    int coin_500;   // 500円硬貨の在庫
+    int bill_1000;  // 1000円紙幣の在庫
 } VendingMachine;
 
 typedef struct{
