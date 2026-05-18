@@ -112,7 +112,16 @@ void saveCSV(Product purchased_item);
 void Inventory_management(int product_id, Product menu[]) {
     // 商品の在庫管理のロジックをここに実装
     // 例: 在庫を減らす
-    menu[product_id].stock -= 1; 
+    if (menu[product_id].stock > 0)// 在庫がある場合のみ減らす
+    {
+        menu[product_id].stock -= 1; 
+        printf("商品ID %d の在庫が減りました。残り在庫: %d\n", product_id, menu[product_id].stock);
+    }
+    else if(menu[product_id].stock == 0)
+    {
+        // 在庫がない場合の処理(売り切れ表示をするなど)
+        printf("商品ID %d の在庫がありません。\n", product_id);
+    }
 }
 
 
