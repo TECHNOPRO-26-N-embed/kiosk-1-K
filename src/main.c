@@ -1,7 +1,47 @@
 #include <stdio.h>
-int main(void) {
-    printf("=== メニュー ===\n");
-    printf("1: 機能A\n");
-    printf("9: 終了\n");
+#include <stdlib.h>
+#include <string.h>
+
+#define TOTAL_PRODUCTS 50
+
+int Inventory_management(int product_id, int quantity) {
+    // 商品の在庫管理のロジックをここに実装
+    
     return 0;
 }
+
+// 商品情報の構造体
+typedef struct{
+    int id;     // 商品ID
+    char name[50];      // 商品名
+    int price;  // 価格
+    int stock;  // 在庫
+} Product;
+
+// 自販機システム管理の構造体
+typedef struct{
+    int current;    // 消費者が投入した金額
+    int total;      // 売上金額
+} VendingMachine;
+
+typedef struct{
+    STATE_INSERT_MONEY;
+    STATE_PRINT_MENU;
+    STATE_SELECT_MENU;
+    STATE_DISPENSE_PRODUCT;
+    STATE_GIVE_CHANGE;
+} VendingState;
+
+void loadMenu(Product menu[]);
+void printMenu(Product menu[], int balance);
+void saveCSV(Product purchased_item);
+
+int main(void)
+{
+	Product menu[TOTAL_PRODUCTS];
+    loadMenu(menu);
+
+
+    
+    return 0;
+} 
