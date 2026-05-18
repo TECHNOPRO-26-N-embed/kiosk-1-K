@@ -103,6 +103,11 @@ int main(void)
 
 
     VendingState current_state = STATE_INSERT_MONEY;
+
+    int TotalMoney = 0;
+    int moto = 0;
+    TotalMoney = TonyuKingaku(moto);
+    printf("投入金額: %d円\n", TotalMoney);
     
     return 0;
 } 
