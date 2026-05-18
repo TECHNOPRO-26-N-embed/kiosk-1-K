@@ -80,12 +80,10 @@ void loadMenu(Product menu[]);
 void printMenu(Product menu[], int balance);
 void saveCSV(Product purchased_item);
 
-int Inventory_management(int product_id, Product menu[]) {
+void Inventory_management(int product_id, Product menu[]) {
     // 商品の在庫管理のロジックをここに実装
     // 例: 在庫を減らす
     menu[product_id].stock -= 1; 
-    
-    return 0;
 }
 
 
@@ -94,7 +92,7 @@ int main(void)
 	Product menu[TOTAL_PRODUCTS];
 //    loadMenu(menu);
 
-    VendingMachine VendingMachine = {
+    VendingMachine machine = {
         .current = 0,
         .total = 0,
         .coin_10 = 100,
@@ -104,12 +102,14 @@ int main(void)
         .bill_1000 = 100
     };
 
-    VendingState current_state = STATE_INSERT_MONEY;
-
     int TotalMoney = 0;
     int moto = 0;
     TotalMoney = TonyuKingaku(moto);
     printf("投入金額: %d円\n", TotalMoney);
+
+    VendingState current_state = STATE_INSERT_MONEY;
+
+
     
     return 0;
 } 
