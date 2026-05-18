@@ -4,6 +4,36 @@
 
 #define TOTAL_PRODUCTS 50
 
+
+// スタートメニューを追加0518(岩野)
+void StartMenu(){
+    int inputKey; // 押された数字
+    int kind = 50; // 商品の種類
+    int price = 100; // 適当な値段
+
+    printf("1を押すと金額投入へ\n");
+    printf("2を押すと終了\n");
+
+    for(int i = 0; i < kind; i++) {
+        // 商品の情報を表示
+            printf("%dジュース:%d円\n", i + 1, price);
+
+        // n個ごとに改行するいつか
+        /*if(i % 10 == 9) {
+            printf("\n");
+         }*/
+     }
+     // ユーザーの入力を受け取る
+     scanf("%d", &inputKey);
+
+     if(inputKey == 1){ // 1が押されたら
+        // 金額投入の関数を呼び出す
+     }else if(inputKey != 1){ // 1以外が押されたら
+        printf("終了します。\n");
+        exit(0);
+  }
+}
+
 // 金額投入の関数
 int TonyuKingaku(int moto) {
     int KingakuChoice;
@@ -102,6 +132,9 @@ int main(void)
     };
 
     VendingState current_state = STATE_INSERT_MONEY;
+
+     //スタートメニュー呼び出し0518(岩野)
+     //StartMenu();
 
     int button_pressed = 0;
     int user_input = 0;
