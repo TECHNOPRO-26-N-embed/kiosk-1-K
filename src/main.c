@@ -45,12 +45,6 @@ int TonyuKingaku(int moto) {
     return moto;
 }
 
-int Inventory_management(int product_id, int quantity) {
-    // 商品の在庫管理のロジックをここに実装
-    
-    return 0;
-}
-
 // 商品情報の構造体
 typedef struct{
     int id;     // 商品ID
@@ -84,6 +78,14 @@ typedef enum {
 void loadMenu(Product menu[]);
 void printMenu(Product menu[], int balance);
 void saveCSV(Product purchased_item);
+
+int Inventory_management(int product_id, Product menu[]) {
+    // 商品の在庫管理のロジックをここに実装
+    // 例: 在庫を減らす
+    menu[product_id].stock -= 1; 
+    
+    return 0;
+}
 
 
 int main(void)
