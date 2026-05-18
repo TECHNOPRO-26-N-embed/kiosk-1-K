@@ -223,7 +223,48 @@ int main(void)
                     case STATE_GIVE_CHANGE:
                         printf("お釣りを返しています...\n");
                         printf("お釣り: %d円\n", machine.current);
-                        machine.current = 0; // お釣りを返した後は残高をリセット
+                        int changeReturn = machine.current;
+
+                        int return_1000 = 0, return_500 = 0, return_100 = 0, return_50 = 0, return_10 = 0;
+                        while(changeReturn >= 1000 && machine.bill_1000 > 0)
+                        {
+                            changeReturn -= 1000;
+                            machine.bill_1000--;
+                            return_1000++;
+                        }
+                        while(changeReturn >= 500 && machine.coin_500 > 0)
+                        {
+                            changeReturn -= 500;
+                            machine.coin_500--;
+                            return_500++;
+                        }
+                        while(changeReturn >= 100 && machine.coin_100 > 0)
+                        {
+                            changeReturn -= 100;
+                            machine.coin_100--;
+                            return_100++;
+                        }
+                        while(changeReturn >= 50 && machine.coin_50 > 0)
+                        {
+                            changeReturn -= 50;
+                            machine.coin_50--;
+                            return_50++;
+                        }
+                        while(changeReturn >= 10 && machine.coin_10 > 0)
+                        {
+                            changeReturn -= 10;
+                            machine.coin_10--;
+                            return_10++;
+                        }
+
+                        if(return_1000 > 0) printf("お釣り: %d円\n", machine.current);
+                        if(return_1000 > 0) printf("1000円札: %d枚\n", return_1000);
+                        if(return_500 > 0) printf("500円硬貨: %d枚\n", return_500);
+                        if(return_100 > 0) printf("100円硬貨: %d枚\n", return_100);
+                        if(return_50 > 0) printf("50円硬貨: %d枚\n", return_50);
+                        if(return_10 > 0) printf("10円硬貨: %d枚\n", return_10);
+
+                        if(changeReturn > 0)
                         current_state = STATE_INSERT_MONEY;
                         break;
         }
