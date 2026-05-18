@@ -14,7 +14,7 @@ int TonyuKingaku(int moto) {
     printf("4: 500円\n");
     printf("5: 1000円\n");
     printf("6: 投入を終了する\n");
-        while (moto < 2000) {
+        while (KingakuChoice != 6) {
             scanf("%d", &KingakuChoice);          
                 if(KingakuChoice == 1) {
                     moto += 10;
@@ -38,7 +38,8 @@ int TonyuKingaku(int moto) {
                 if (KingakuChoice == 6){
                     break;
                 }
-                }else{
+                }else if (KingakuChoice < 1 || KingakuChoice > 6) {
+                printf("無効な選択です。もう一度選んでください。\n");
                 printf("現在投入金額: %d円\n", moto);
                 }
             }
@@ -91,7 +92,7 @@ int Inventory_management(int product_id, Product menu[]) {
 int main(void)
 {
 	Product menu[TOTAL_PRODUCTS];
-    loadMenu(menu);
+//    loadMenu(menu);
 
     VendingMachine VendingMachine = {
         .current = 0,
@@ -109,7 +110,6 @@ int main(void)
     int moto = 0;
     TotalMoney = TonyuKingaku(moto);
     printf("投入金額: %d円\n", TotalMoney);
-    //int button_pressed =
     
     return 0;
 } 
