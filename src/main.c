@@ -103,9 +103,9 @@ int main(void)
         .bill_1000 = 100
     };
 
-
     VendingState current_state = STATE_INSERT_MONEY;
+
+    //int button_pressed =
     
     return 0;
 } 
-
