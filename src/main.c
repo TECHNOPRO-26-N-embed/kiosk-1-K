@@ -4,6 +4,12 @@
 
 #define TOTAL_PRODUCTS 50
 
+int Inventory_management(int product_id, int quantity) {
+    // 商品の在庫管理のロジックをここに実装
+    
+    return 0;
+}
+
 // 商品情報の構造体
 typedef struct{
     int id;     // 商品ID
@@ -16,22 +22,14 @@ typedef struct{
 typedef struct{
     int current;    // 消費者が投入した金額
     int total;      // 売上金額
-    
-    // 硬貨と紙幣の保有枚数
-    int coin_10;    // 10円硬貨の枚数
-    int coin_50;    // 50円硬貨の枚数
-    int coin_100;   // 100円硬貨の枚数
-    int coin_500;   // 500円硬貨の枚数
-    int bill_1000;  // 1000円札の枚数
 } VendingMachine;
 
-// 自販機の状態を表す構造体
 typedef struct{
-    STATE_INSERT_MONEY;     // お金の投入
-    STATE_PRINT_MENU;       // メニューの表示
-    STATE_SELECT_MENU;      // メニューの選択
-    STATE_DISPENSE_PRODUCT; // 商品の提供
-    STATE_GIVE_CHANGE;      // お釣りの提供
+    STATE_INSERT_MONEY;
+    STATE_PRINT_MENU;
+    STATE_SELECT_MENU;
+    STATE_DISPENSE_PRODUCT;
+    STATE_GIVE_CHANGE;
 } VendingState;
 
 int main(void)
