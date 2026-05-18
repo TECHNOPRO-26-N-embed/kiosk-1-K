@@ -2,44 +2,13 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "ビルド",
+            "label": "Build C",
             "type": "shell",
             "command": "gcc",
-            "args": ["src/main.c", "-o", "app.exe", "-Wall"],
-            "group": { "kind": "build", "isDefault": true },
-            "problemMatcher": {
-                "owner": "gcc",
-                "fileLocation": ["relative", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "detail": "Ctrl+Shift+B でコンパイル → app.exe が生成されます"
-        },
-        {
-            "label": "実行",
-            "type": "shell",
-            "command": ".\\app.exe",
-            "group": "test",
-            "dependsOn": "ビルド",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "dedicated"
-            },
-            "detail": "ビルド後に自動実行します"
+            "args": ["-finput-charset=utf-8", "-fexec-charset=cp932", "src/main.c", "-o", "app.exe"],
+            "group": {"kind": "build", "isDefault": true},
+            "problemMatcher": [],
+            "detail": "gcc で src/main.c をコンパイル"
         }
     ]
 }
