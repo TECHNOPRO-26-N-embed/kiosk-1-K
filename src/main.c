@@ -4,6 +4,47 @@
 
 #define TOTAL_PRODUCTS 50
 
+// 金額投入の関数
+int TonyuKingaku(int moto) {
+    int KingakuChoice;
+    printf("投入金額をえらんでください。\n");
+    printf("1: 10円\n");
+    printf("2: 50円\n");
+    printf("3: 100円\n");
+    printf("4: 500円\n");
+    printf("5: 1000円\n");
+    printf("6: 投入を終了する\n");
+        while (moto < 2000) {
+            scanf("%d", &KingakuChoice);          
+                if(KingakuChoice == 1) {
+                    moto += 10;
+                    printf("現在の投入金額: %d円\n", moto);
+                }
+                if(KingakuChoice == 2) {
+                    moto += 50;
+                    printf("現在の投入金額: %d円\n", moto);
+                }
+                if(KingakuChoice == 3) {
+                    moto += 100;
+                    printf("現在の投入金額: %d円\n", moto);
+                }
+                if(KingakuChoice == 4) {
+                    moto += 500;
+                    printf("現在の投入金額: %d円\n", moto);
+                }
+                if(KingakuChoice == 5) {
+                    moto += 1000;
+                    printf("現在の投入金額: %d円\n", moto);
+                if (KingakuChoice == 6){
+                    break;
+                }
+                }else{
+                printf("現在投入金額: %d円\n", moto);
+                }
+            }
+    return moto;
+}
+
 int Inventory_management(int product_id, int quantity) {
     // 商品の在庫管理のロジックをここに実装
     
