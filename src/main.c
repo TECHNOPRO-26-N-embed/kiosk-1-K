@@ -4,36 +4,6 @@
 
 #define TOTAL_PRODUCTS 50
 
-
-// スタートメニューを追加0518(岩野)
-void StartMenu(){
-    int inputKey; // 押された数字
-    int kind = 50; // 商品の種類
-    int price = 100; // 適当な値段
-
-    printf("1を押すと金額投入へ\n");
-    printf("2を押すと終了\n");
-
-    for(int i = 0; i < kind; i++) {
-        // 商品の情報を表示
-            printf("%dジュース:%d円\n", i + 1, price);
-
-        // n個ごとに改行するいつか
-        /*if(i % 10 == 9) {
-            printf("\n");
-         }*/
-     }
-     // ユーザーの入力を受け取る
-     scanf("%d", &inputKey);
-
-     if(inputKey == 1){ // 1が押されたら
-        // 金額投入の関数を呼び出す
-     }else if(inputKey != 1){ // 1以外が押されたら
-        printf("終了します。\n");
-        exit(0);
-  }
-}
-
 // 金額投入の関数
 int TonyuKingaku(int moto) {
     
@@ -76,6 +46,40 @@ int TonyuKingaku(int moto) {
     return moto;
 
 }
+
+// スタートメニューを追加0518(岩野)
+void StartMenu(){
+    int inputKey; // 押された数字
+    int price = 100; // 適当な値段
+
+    for(int i = 0; i < TOTAL_PRODUCTS; i++) {
+        // 商品の情報を表示
+            printf("%dジュース:%d円 ", i + 1, price);
+
+        // 5個ごとに改行する
+        if(i % 5 == 4) {
+            printf("\n");
+         }
+     }
+
+    printf("1を押すと金額投入へ\n");
+    printf("2を押すと終了\n");
+
+     // ユーザーの入力を受け取る
+     scanf("%d", &inputKey);
+
+     if(inputKey == 1){ // 1が押されたら
+        // 金額投入の関数を呼び出す
+        int TotalMoney = 0;
+        int moto = 0;
+        TotalMoney = TonyuKingaku(moto);
+        printf("投入金額: %d円\n", TotalMoney);
+     }else if(inputKey != 1){ // 1以外が押されたら
+        printf("終了します。\n");
+        exit(0);
+  }
+}
+
 
 // 商品情報の構造体
 typedef struct{
