@@ -37,7 +37,7 @@ void StartMenu(){
 // 金額投入の関数
 int TonyuKingaku(int moto) {
     
-int KingakuChoice;
+    int KingakuChoice;
 
     while (moto < 10000) {
 
@@ -125,7 +125,6 @@ void Inventory_management(int product_id, Product menu[]) {
         printf("商品ID %d の在庫がありません。\n", product_id);
     }
 }
-
 
 int main(void)
 {
