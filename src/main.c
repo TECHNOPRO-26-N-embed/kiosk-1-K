@@ -34,7 +34,7 @@ int TonyuKingaku(int moto) {
         else if(KingakuChoice == 3) moto += 100;
         else if(KingakuChoice == 4) moto += 500;
         else if(KingakuChoice == 5) moto += 1000;
-        else if(KingakuChoice == 6) break;
+        else if(KingakuChoice == 6) exit(0);
         else {
             printf("無効な番号\n");
             continue;
