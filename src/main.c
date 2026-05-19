@@ -47,20 +47,32 @@ int TonyuKingaku(int moto) {
 
 }
 
-// スタートメニューを追加0518(岩野)
-void StartMenu(){
-    int inputKey; // 押された数字
-    int price = 100; // 適当な値段
+void Menu(){
 
+    printf("============メニュー================================================================\n");
+
+    int price = 100; // 適当な値段
     for(int i = 0; i < TOTAL_PRODUCTS; i++) {
         // 商品の情報を表示
             printf("%dジュース:%d円 ", i + 1, price);
 
+        //  9個目まで空白を増やす
+        if(i < 9) {
+            printf(" ");
+        }
         // 5個ごとに改行する
         if(i % 5 == 4) {
             printf("\n");
          }
      }
+        printf("====================================================================================\n");
+}
+
+// スタートメニューを追加0518(岩野)
+void StartMenu(){
+    int inputKey; // 押された数字
+
+    Menu(); // メニュー表示
 
     printf("1を押すと金額投入へ\n");
     printf("2を押すと終了\n");
@@ -69,7 +81,9 @@ void StartMenu(){
      scanf("%d", &inputKey);
 
      if(inputKey == 1){ // 1が押されたら
+
         // 金額投入の関数を呼び出す
+        Menu(); // メニュー表示
         int TotalMoney = 0;
         int moto = 0;
         TotalMoney = TonyuKingaku(moto);
