@@ -22,10 +22,10 @@ Read [](file:///c%3A/Users/User/Desktop/%E6%8A%80%E8%A1%93%E7%A0%94%E4%BF%AE%E7%
 
 | 関数名 | 役割 |
 |---|---|
-| show_main_menu | メインメニュー表示（購入、管理、終了など）。 |
-| show_product_list | 商品番号、商品名、価格、在庫、売り切れ状態を表示。 |
+| show_main_menu | メインメニュー表示（購入、終了など）。 |
+| show_product_list | 商品番号、商品名、価格、売り切れ状態を表示。 |
 | show_current_balance | 現在投入金額を表示。 |
-| read_int_safe | 数値入力を安全に受け取る。文字入力時は再入力させる。 |
+| read_int_safe | 投入する金額に対応する番号入力を受け取り反映 |
 | input_product_no | 商品番号を受け取り、範囲チェックする。 |
 | input_quantity | 購入数量を受け取り、1以上かつ在庫以内で検証する。 |
 
@@ -36,6 +36,7 @@ Read [](file:///c%3A/Users/User/Desktop/%E6%8A%80%E8%A1%93%E7%A0%94%E4%BF%AE%E7%
 | input_money_counts | 10円・50円・100円・500円・1000円の投入枚数（または枚/枚/枚/枚/枚）を受け取る。 |
 | calc_inserted_amount | 投入枚数から合計投入金額を計算する。 |
 | add_money_to_machine | 自販機内の金種別保有枚数に投入分を加算する。 |
+| limit_max_money | 投入可能な最大金額5000円を超えたら投入不可処理 |
 | can_afford | 残高が購入金額以上か判定する。 |
 | calc_total_price | 単価×数量で購入金額を算出する。 |
 | calc_change_amount | 釣銭額（投入金額−購入金額）を計算する。 |
@@ -58,6 +59,7 @@ Read [](file:///c%3A/Users/User/Desktop/%E6%8A%80%E8%A1%93%E7%A0%94%E4%BF%AE%E7%
 | 関数名 | 役割 |
 |---|---|
 | log_sale_csv | 売上CSVへ記録（日時、商品、数量、単価、合計、投入、釣銭、残りの硬貨の枚数など）。 |
+| log_money_csv | 10, 50, 100, 500, 1000円各種類の残り枚数を表示。　|
 | log_operation_csv | 操作ログCSVへ記録（投入、選択、キャンセル、補充など）。 |
 | log_error_csv | 異常系ログCSVへ記録（不正入力、在庫不足、釣銭不足など）。 |
 | log_fault_prediction_csv | 故障予兆データCSVへ記録（商品詰まり、釣銭切れ傾向など）。 |
