@@ -36,43 +36,45 @@ void StartMenu(){
 
 // 金額投入の関数
 int TonyuKingaku(int moto) {
-    int KingakuChoice;
-    printf("投入金額をえらんでください。\n");
-    printf("1: 10円\n");
-    printf("2: 50円\n");
-    printf("3: 100円\n");
-    printf("4: 500円\n");
-    printf("5: 1000円\n");
-    printf("6: 投入を終了する\n");
-        while (moto < 2000) {
-            scanf("%d", &KingakuChoice);          
-                if(KingakuChoice == 1) {
-                    moto += 10;
-                    printf("現在の投入金額: %d円\n", moto);
-                }
-                if(KingakuChoice == 2) {
-                    moto += 50;
-                    printf("現在の投入金額: %d円\n", moto);
-                }
-                if(KingakuChoice == 3) {
-                    moto += 100;
-                    printf("現在の投入金額: %d円\n", moto);
-                }
-                if(KingakuChoice == 4) {
-                    moto += 500;
-                    printf("現在の投入金額: %d円\n", moto);
-                }
-                if(KingakuChoice == 5) {
-                    moto += 1000;
-                    printf("現在の投入金額: %d円\n", moto);
-                if (KingakuChoice == 6){
-                    break;
-                }
-                }else{
-                printf("現在投入金額: %d円\n", moto);
-                }
-            }
+    
+int KingakuChoice;
+
+    while (moto < 10000) {
+
+        printf("\n===============================\n");
+        printf("[現在投入残高: %d円]\n", moto);
+        printf("投入金額をえらんでください。\n");
+        printf("1: 10円\n");
+        printf("2: 50円\n");
+        printf("3: 100円\n");
+        printf("4: 500円\n");
+        printf("5: 1000円\n");
+        printf("6: 投入を終了する\n");
+        printf("===============================\n");
+        printf("選択: ");
+
+        if(scanf("%d", &KingakuChoice) != 1){
+            printf("無効な入力\n");
+            while(getchar() != '\n');
+            continue;
+        }
+
+        if(KingakuChoice == 1) moto += 10;
+        else if(KingakuChoice == 2) moto += 50;
+        else if(KingakuChoice == 3) moto += 100;
+        else if(KingakuChoice == 4) moto += 500;
+        else if(KingakuChoice == 5) moto += 1000;
+        else if(KingakuChoice == 6) break;
+        else {
+            printf("無効な番号\n");
+            continue;
+        }
+
+        printf("現在の投入金額: %d円\n", moto);
+    }
+
     return moto;
+
 }
 
 // 商品情報の構造体
@@ -154,175 +156,130 @@ int main(void)
         switch (current_state)
         {
             case STATE_INSERT_MONEY:
-                printf("\n===============================\n");
-                printf("[現在投入残高: %d円] (※最大10000円まで)\n", machine.current);
-                printf("投入ボタンを選んでください:\n");
-                printf("1: [10円] 2: [50円] 3: [100円] 4: [500円] 5: [1000円] 6: [投入終了]\n");
-                printf("===============================\n");
-                printf("選択: ");
+                
+                machine.current = TonyuKingaku(machine.current);
 
-                if(scanf("%d", &button_pressed) != 1)
+                if(machine.current > 0){
+                    current_state = STATE_PRINT_MENU;
+                } else {
+                    printf("お金が投入されていません\n");
+                }
+
+                break;
+
+            // メニュー表示と選択の処理
+            case STATE_PRINT_MENU:
+                printMenu(menu, machine.current);
+                current_state = STATE_SELECT_MENU;
+                break;
+
+            case STATE_SELECT_MENU:
+                printf("購入する商品番号(1~%d)を選んでください（お金をもっと入れる場合は0を入力）:\n", TOTAL_PRODUCTS);
+
+                if(scanf("%d", &user_input) != 1)
                 {
                     printf("無効な入力です。もう一度選択してください。\n");
                     while(getchar() != '\n'); // 入力バッファをクリア
-                    continue;
+                    break;
                 }
 
-                int added_amount = 0;
-
-                // ボタン入力による金額の追加と状態遷移の処理
-                switch (button_pressed)
+                if(user_input == 0)
                 {
-                    case 1: added_amount = 10; break;
-                    case 2: added_amount = 50; break;
-                    case 3: added_amount = 100; break;
-                    case 4: added_amount = 500; break;
-                    case 5: added_amount = 1000; break;
-
-                    // 投入終了ボタンが押された場合の処理
-                    case 6: 
-                        if(machine.current == 0)
-                        {
-                            printf("お金を先に入れてください。\n");
-                        }
-                        else
-                        {
-                            current_state = STATE_PRINT_MENU;
-                        }
-                        
-                        continue;
-                    // お釣り返却ボタンが押された場合の処理
-                    case 7:
-                        current_state = STATE_GIVE_CHANGE;
-                        continue;
-                    default:
-                        printf("無効な選択です。もう一度選択してください。\n");
-                        continue;
+                    current_state = STATE_INSERT_MONEY;
+                    break;
                 }
-
-                // 金額の追加前に最大投入金額を超えないか確認
-                if(machine.current + added_amount > 10000)
+                else if(user_input < 1 || user_input > TOTAL_PRODUCTS)
                 {
-                    printf("これ以上投入できません。最大投入金額は10000円です。\n");
+                    printf("無効な商品番号です。もう一度選択してください。\n");
                 }
-                else
+                
+                target_index = user_input - 1; // 商品番号は1から始まるため、インデックスは-1する
+
+                if(menu[target_index].stock <= 0)
                 {
-                    machine.current += added_amount;
-                    printf("%d円を投入しました。現在の残高: %d円\n", added_amount, machine.current);
+                    printf("申し訳ありませんが、%sは在庫切れです。\n", menu[target_index].name);
+                    break;
                 }
+                if(machine.current < menu[target_index].price)
+                {
+                    printf("残高が不足しています。%sの価格は%d円ですが、現在の残高は%d円です。\n", menu[target_index].name, menu[target_index].price, machine.current);
+                    break;
+                }
+                
+                current_state = STATE_DISPENSE_PRODUCT;
                 break;
                 
-                // メニュー表示と選択の処理
-                case STATE_PRINT_MENU:
-                    printMenu(menu, machine.current);
-                    current_state = STATE_SELECT_MENU;
+                // 商品提供と在庫管理の処理
+                case STATE_DISPENSE_PRODUCT:
+                    printf("%sを提供しています...\n", menu[target_index].name);
+                    machine.current -= menu[target_index].price;
+                    machine.total += menu[target_index].price;
+                    Inventory_management(target_index, menu);
+                    saveCSV(menu[target_index]);
+                    printf("%sを購入しました。残高: %d円\n", menu[target_index].name, machine.current);
+                    current_state = STATE_PRINT_MENU;
                     break;
 
-                case STATE_SELECT_MENU:
-                    printMenu("購入する商品番号(1~%d)を選んでください（お金をもっと入れる場合は0を入力）:\n", TOTAL_PRODUCTS);
+                // お釣り返却の処理
+                case STATE_GIVE_CHANGE:
+                    printf("お釣りを返しています...\n");
+                    printf("お釣り: %d円\n", machine.current);
+                    int changeReturn = machine.current;
 
-                    if(scanf("%d", &user_input) != 1)
+                    // お釣りを返すためのループ
+                    int return_1000 = 0, return_500 = 0, return_100 = 0, return_50 = 0, return_10 = 0;
+                    while(changeReturn >= 1000 && machine.bill_1000 > 0)
                     {
-                        printf("無効な入力です。もう一度選択してください。\n");
-                        while(getchar() != '\n'); // 入力バッファをクリア
-                        break;
+                        changeReturn -= 1000;
+                        machine.bill_1000--;
+                        return_1000++;
+                    }
+                    while(changeReturn >= 500 && machine.coin_500 > 0)
+                    {
+                        changeReturn -= 500;
+                        machine.coin_500--;
+                        return_500++;
+                    }
+                    while(changeReturn >= 100 && machine.coin_100 > 0)
+                    {
+                        changeReturn -= 100;
+                        machine.coin_100--;
+                        return_100++;
+                    }
+                    while(changeReturn >= 50 && machine.coin_50 > 0)
+                    {
+                        changeReturn -= 50;
+                        machine.coin_50--;
+                        return_50++;
+                    }
+                    while(changeReturn >= 10 && machine.coin_10 > 0)
+                    {
+                        changeReturn -= 10;
+                        machine.coin_10--;
+                        return_10++;
                     }
 
-                    if(user_input == 0)
+                    // 返却するお釣りの内訳を表示
+                    if(return_1000 > 0) printf("お釣り: %d円\n", machine.current);
+                    if(return_1000 > 0) printf("1000円札: %d枚\n", return_1000);
+                    if(return_500 > 0) printf("500円硬貨: %d枚\n", return_500);
+                    if(return_100 > 0) printf("100円硬貨: %d枚\n", return_100);
+                    if(return_50 > 0) printf("50円硬貨: %d枚\n", return_50);
+                    if(return_10 > 0) printf("10円硬貨: %d枚\n", return_10);
+
+                    // お釣りを完全に返せなかった場合の対応
+                    if(changeReturn > 0)
                     {
-                        current_state = STATE_INSERT_MONEY;
-                        break;
+                        printf("申し訳ありませんが、十分なお釣りを返すことができません。残りのお釣り: %d円\n", changeReturn);
+                        printf("管理者にお問合せください。\n");
                     }
-                    else if(user_input < 1 || user_input > TOTAL_PRODUCTS)
-                    {
-                        printf("無効な商品番号です。もう一度選択してください。\n");
+                    else{
+                        printf("お釣りを返しました。ありがとうございました！\n");
                     }
                     
-                    target_index = user_input - 1; // 商品番号は1から始まるため、インデックスは-1する
-
-                    if(menu[target_index].stock <= 0)
-                    {
-                        printf("申し訳ありませんが、%sは在庫切れです。\n", menu[target_index].name);
-                    }
-                    if(machine.current < menu[target_index].price)
-                    {
-                        printf("残高が不足しています。%sの価格は%d円ですが、現在の残高は%d円です。\n", menu[target_index].name, menu[target_index].price, machine.current);
-                    }
-                    
-                    current_state = STATE_DISPENSE_PRODUCT;
+                    machine.current = 0; // 残高をリセット
+                    current_state = STATE_INSERT_MONEY;
                     break;
-                    
-                    // 商品提供と在庫管理の処理
-                    case STATE_DISPENSE_PRODUCT:
-                        printf("%sを提供しています...\n", menu[target_index].name);
-                        machine.current -= menu[target_index].price;
-                        machine.total += menu[target_index].price;
-                        Inventory_management(target_index, menu);
-                        saveCSV(menu[target_index]);
-                        printf("%sを購入しました。残高: %d円\n", menu[target_index].name, machine.current);
-                        current_state = STATE_PRINT_MENU;
-                        break;
-
-                    // お釣り返却の処理
-                    case STATE_GIVE_CHANGE:
-                        printf("お釣りを返しています...\n");
-                        printf("お釣り: %d円\n", machine.current);
-                        int changeReturn = machine.current;
-
-                        // お釣りを返すためのループ
-                        int return_1000 = 0, return_500 = 0, return_100 = 0, return_50 = 0, return_10 = 0;
-                        while(changeReturn >= 1000 && machine.bill_1000 > 0)
-                        {
-                            changeReturn -= 1000;
-                            machine.bill_1000--;
-                            return_1000++;
-                        }
-                        while(changeReturn >= 500 && machine.coin_500 > 0)
-                        {
-                            changeReturn -= 500;
-                            machine.coin_500--;
-                            return_500++;
-                        }
-                        while(changeReturn >= 100 && machine.coin_100 > 0)
-                        {
-                            changeReturn -= 100;
-                            machine.coin_100--;
-                            return_100++;
-                        }
-                        while(changeReturn >= 50 && machine.coin_50 > 0)
-                        {
-                            changeReturn -= 50;
-                            machine.coin_50--;
-                            return_50++;
-                        }
-                        while(changeReturn >= 10 && machine.coin_10 > 0)
-                        {
-                            changeReturn -= 10;
-                            machine.coin_10--;
-                            return_10++;
-                        }
-
-                        // 返却するお釣りの内訳を表示
-                        if(return_1000 > 0) printf("お釣り: %d円\n", machine.current);
-                        if(return_1000 > 0) printf("1000円札: %d枚\n", return_1000);
-                        if(return_500 > 0) printf("500円硬貨: %d枚\n", return_500);
-                        if(return_100 > 0) printf("100円硬貨: %d枚\n", return_100);
-                        if(return_50 > 0) printf("50円硬貨: %d枚\n", return_50);
-                        if(return_10 > 0) printf("10円硬貨: %d枚\n", return_10);
-
-                        // お釣りを完全に返せなかった場合の対応
-                        if(changeReturn > 0)
-                        {
-                            printf("申し訳ありませんが、十分なお釣りを返すことができません。残りのお釣り: %d円\n", changeReturn);
-                            printf("管理者にお問合せください。\n");
-                        }
-                        else{
-                            printf("お釣りを返しました。ありがとうございました！\n");
-                        }
-                        
-                        machine.current = 0; // 残高をリセット
-                        current_state = STATE_INSERT_MONEY;
-                        break;
         }
     }
     
