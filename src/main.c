@@ -176,6 +176,7 @@ int main(void)
                 current_state = STATE_SELECT_MENU;
                 break;
 
+            // メニュー選択の処理
             case STATE_SELECT_MENU:
                 printf("購入する商品番号(1~%d)を選んでください（お金をもっと入れる場合は0を入力）:\n", TOTAL_PRODUCTS);
 
@@ -198,11 +199,13 @@ int main(void)
                 
                 target_index = user_input - 1; // 商品番号は1から始まるため、インデックスは-1する
 
+                // 在庫と残高の確認
                 if(menu[target_index].stock <= 0)
                 {
                     printf("申し訳ありませんが、%sは在庫切れです。\n", menu[target_index].name);
                     break;
                 }
+                // 商品の価格と投入金額を比較
                 if(machine.current < menu[target_index].price)
                 {
                     printf("残高が不足しています。%sの価格は%d円ですが、現在の残高は%d円です。\n", menu[target_index].name, menu[target_index].price, machine.current);
