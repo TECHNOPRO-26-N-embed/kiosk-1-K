@@ -20,6 +20,7 @@ int TonyuKingaku(int moto) {
         printf("4: 500円\n");
         printf("5: 1000円\n");
         printf("6: 投入を終了する\n");
+        printf("7: 購入を終了\n");
         printf("===============================\n");
         printf("選択: ");
 
@@ -34,7 +35,8 @@ int TonyuKingaku(int moto) {
         else if(KingakuChoice == 3) moto += 100;
         else if(KingakuChoice == 4) moto += 500;
         else if(KingakuChoice == 5) moto += 1000;
-        else if(KingakuChoice == 6) exit(0);
+        else if(KingakuChoice == 6) break;
+        else if(KingakuChoice == 7) exit(0);
         else {
             printf("無効な番号\n");
             continue;
