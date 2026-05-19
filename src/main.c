@@ -129,7 +129,7 @@ void Inventory_management(int product_id, Product menu[]) {
 int main(void)
 {
 	Product menu[TOTAL_PRODUCTS];
-    loadMenu(menu);
+    //loadMenu(menu);
 
     VendingMachine machine = {
         .current = 0,
@@ -168,7 +168,7 @@ int main(void)
 
             // メニュー表示と選択の処理
             case STATE_PRINT_MENU:
-                printMenu(menu, machine.current);
+                //printMenu(menu, machine.current);
                 current_state = STATE_SELECT_MENU;
                 break;
 
@@ -214,7 +214,7 @@ int main(void)
                     machine.current -= menu[target_index].price;
                     machine.total += menu[target_index].price;
                     Inventory_management(target_index, menu);
-                    saveCSV(menu[target_index]);
+                    //saveCSV(menu[target_index]);
                     printf("%sを購入しました。残高: %d円\n", menu[target_index].name, machine.current);
                     current_state = STATE_PRINT_MENU;
                     break;
