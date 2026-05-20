@@ -5,7 +5,7 @@
             "label": "Build C",
             "type": "shell",
             "command": "gcc",
-            "args": ["-finput-charset=cp932", "-fexec-charset=utf-8", "src/main.c", "-o", "app.exe"],
+            "args": ["-finput-charset=utf-8", "-fexec-charset=utf-8", "src/main.c", "-o", "app.exe"],
             "group": {"kind": "build", "isDefault": true},
             "problemMatcher": [],
             "detail": "gcc で src/main.c をコンパイル"

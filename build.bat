@@ -1,7 +1,7 @@
 @echo off
 echo.
 echo === コンパイル中 ===
-gcc -finput-charset=cp932 -fexec-charset=utf-8 src\main.c -o app.exe -Wall
+gcc -finput-charset=utf-8 -fexec-charset=utf-8 src\main.c -o app.exe -Wall
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo [成功] app.exe が生成されました
