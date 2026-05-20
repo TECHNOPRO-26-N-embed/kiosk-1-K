@@ -16,6 +16,7 @@
 #define INPUT_BUF 256
 #define PRODUCT_COLS 5
 #define PRODUCT_CELL_WIDTH 14
+#define ADMIN_MENU_CODE 99999
 
 #define PRODUCT_CSV_FILE "docs/menu.csv"
 #define LOG_CSV_FILE "data/data.csv"
@@ -69,7 +70,7 @@ typedef struct {
 
 /* 商品情報、自販機内金種、取引状態を保持するグローバル変数。 */
 static Product g_products[MAX_PRODUCTS];
-static int g_machine_money[DENOM_COUNT] = {30, 20, 30, 20, 10};
+static int g_machine_money[DENOM_COUNT] = {0, 20, 30, 20, 10};
 static const int g_denominations[DENOM_COUNT] = {10, 50, 100, 500, 1000};
 static TransactionState g_tx;
 static SaleData g_last_sale;
@@ -138,6 +139,12 @@ static void utf8_truncate_display_width(const char *src, int max_width, char *ds
 
 /* 00入力による終了要求状態を返す。 */
 static int is_shutdown_requested(void);
+
+/* メインメニュー専用入力（000:管理者、00:即時終了）を処理する。 */
+static int read_main_menu_choice(void);
+
+/* 返金可能分の内訳を作成し、未返金額を返す。 */
+static int calc_change_breakdown_with_shortage(int change_amount, int out_counts[DENOM_COUNT]);
 
 /* 文字列がUTF-8として妥当か判定する。 */
 static int is_valid_utf8(const char *s);
@@ -224,6 +231,28 @@ static int simulate_change_breakdown(int change_amount, int out_counts[DENOM_COU
     }
 
     return (remaining == 0) ? 1 : 0;
+}
+
+/* 返金可能分の内訳を作成し、未返金額を返す。 */
+static int calc_change_breakdown_with_shortage(int change_amount, int out_counts[DENOM_COUNT]) {
+    int remaining = change_amount;
+    int i;
+
+    for (i = 0; i < DENOM_COUNT; i++) {
+        out_counts[i] = 0;
+    }
+
+    for (i = DENOM_COUNT - 2; i >= 0; i--) {
+        int use = 0;
+        if (g_denominations[i] > 0) {
+            int need = remaining / g_denominations[i];
+            use = (need < g_machine_money[i]) ? need : g_machine_money[i];
+            out_counts[i] = use;
+            remaining -= use * g_denominations[i];
+        }
+    }
+
+    return remaining;
 }
 
 /* 商品50種類の初期値（名称・価格・在庫）を設定する。 */
@@ -349,6 +378,7 @@ int restock_product(int product_id, int quantity) {
 void show_main_menu(void) {
     printf("\n=== メインメニュー ===\n");
     printf("1. 購入を開始する\n");
+    printf("000. 管理者メニュー\n");
     printf("0. 終了\n");
     printf("00. 即時終了\n");
     printf("選択してください: ");
@@ -855,7 +885,7 @@ void run_vending_machine(void) {
         int choice;
         show_product_list();
         show_main_menu();
-        choice = read_int_safe();
+        choice = read_main_menu_choice();
 
         if (is_shutdown_requested()) {
             running = 0;
@@ -980,6 +1010,8 @@ void run_vending_machine(void) {
             start_transaction();
         } else if (choice == 0) {
             running = 0;
+        } else if (choice == ADMIN_MENU_CODE) {
+            handle_admin_menu();
         } else {
             printf("メニューの選択が不正です。\n");
             log_error_csv(LOG_CSV_FILE,
@@ -991,6 +1023,40 @@ void run_vending_machine(void) {
 /* 00入力による終了要求状態を返す。 */
 static int is_shutdown_requested(void) {
     return g_shutdown_requested;
+}
+
+/* メインメニュー専用入力（000:管理者、00:即時終了）を処理する。 */
+static int read_main_menu_choice(void) {
+    char buf[INPUT_BUF];
+    char *endptr;
+    long v;
+
+    while (1) {
+        if (fgets(buf, sizeof(buf), stdin) == NULL) {
+            g_shutdown_requested = 1;
+            return 0;
+        }
+        trim_newline(buf);
+
+        if (strcmp(buf, "00") == 0) {
+            g_shutdown_requested = 1;
+            return 0;
+        }
+        if (strcmp(buf, "000") == 0) {
+            return ADMIN_MENU_CODE;
+        }
+        if (buf[0] == '\0') {
+            printf("数値を入力してください（00で終了）: ");
+            continue;
+        }
+
+        v = strtol(buf, &endptr, 10);
+        if (*endptr == '\0') {
+            return (int)v;
+        }
+
+        printf("不正な入力です。再入力してください（00で終了）: ");
+    }
 }
 
 /* UTF-8として妥当なら1を返す。 */
@@ -1089,7 +1155,10 @@ static int get_min_available_price(void) {
 /* 返金可能なら釣銭を払い出し、取引を終了する。 */
 static void payout_and_end_transaction(const char *reason) {
     int change_amount = g_tx.balance;
-    int *change_counts;
+    int change_counts[DENOM_COUNT] = {0, 0, 0, 0, 0};
+    int requested_counts[DENOM_COUNT] = {0, 0, 0, 0, 0};
+    int unpaid_amount;
+    int paid_amount = 0;
     int i;
 
     if (reason != NULL) {
@@ -1102,23 +1171,40 @@ static void payout_and_end_transaction(const char *reason) {
         return;
     }
 
-    if (!can_make_change(change_amount)) {
-        printf("正確な釣銭を返却できません。管理者へ連絡してください。\n");
-        log_error_csv(LOG_CSV_FILE,
-                      make_error_log("返金失敗", "釣銭不足で返金できませんでした。"));
-        log_fault_prediction_csv(LOG_CSV_FILE,
-                                 make_fault_log("釣銭リスク", 95, "返金用金種が不足しています。"));
-        reset_for_next_customer();
-        return;
-    }
-
-    change_counts = make_change_breakdown(change_amount);
+    unpaid_amount = calc_change_breakdown_with_shortage(change_amount, change_counts);
     apply_change_payout(change_counts);
-    printf("返金額: %d 円\n", change_amount);
-    printf("返金内訳:　");
+    printf("返金要求額: %d円\n", change_amount);
+    printf("返金内訳: ");
     for (i = DENOM_COUNT - 1; i >= 0; i--) {
+        paid_amount += g_denominations[i] * change_counts[i];
         printf("%4d円: %d枚　", g_denominations[i], change_counts[i]);
     }
+    printf("\n");
+
+    if (unpaid_amount > 0) {
+        int remain = change_amount;
+        for (i = DENOM_COUNT - 2; i >= 0; i--) {
+            requested_counts[i] = remain / g_denominations[i];
+            remain -= requested_counts[i] * g_denominations[i];
+        }
+
+        for (i = DENOM_COUNT - 2; i >= 0; i--) {
+            int shortage = requested_counts[i] - change_counts[i];
+            if (shortage > 0) {
+                printf("%d円 %d枚が返却できませんでした。\n", g_denominations[i], shortage);
+            }
+        }
+        printf("未返金額: %d円\n", unpaid_amount);
+        printf("管理者にお問い合わせください。\n");
+
+        log_error_csv(LOG_CSV_FILE,
+                      make_error_log("返金不足", "一部返金のみ実施し、未返金が発生しました。"));
+        log_fault_prediction_csv(LOG_CSV_FILE,
+                                 make_fault_log("釣銭リスク", 95, "返金用金種が不足しています。"));
+    } else {
+        printf("返金額: %d円\n", paid_amount);
+    }
+
     log_money_csv(LOG_CSV_FILE, g_machine_money);
     reset_for_next_customer();
     printf("\n\n");
