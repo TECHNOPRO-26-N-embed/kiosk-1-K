@@ -361,16 +361,23 @@ int reduce_stock(int product_id, int quantity) {
 /* 在庫上限を超えない範囲で商品在庫を補充する。 */
 int restock_product(int product_id, int quantity) {
     Product *p;
+    int remaining_capacity;
+
     if (product_id < 1 || product_id > MAX_PRODUCTS || quantity <= 0) {
         return -1;
     }
 
     p = &g_products[product_id - 1];
-    if (p->stock + quantity > p->max_stock) {
-        p->stock = p->max_stock;
-    } else {
-        p->stock += quantity;
+    if (p->stock < 0 || p->stock > p->max_stock) {
+        return -1;
     }
+
+    remaining_capacity = p->max_stock - p->stock;
+    if (quantity > remaining_capacity) {
+        return -1;
+    }
+
+    p->stock += quantity;
     return 0;
 }
 
@@ -859,8 +866,10 @@ void handle_admin_menu(void) {
                 log_operation_csv(LOG_CSV_FILE,
                                   make_operation_log("補充", "管理者が商品を補充しました。"));
             } else {
-                printf("補充に失敗しました。\n");
-                log_error_csv(LOG_CSV_FILE, make_error_log("補充失敗", "管理者補充処理が失敗しました。"));
+                printf("不正な補充操作です。在庫上限(%d)を超えるか入力値が不正です。\n", MAX_STOCK);
+                printf("管理者メニューに戻ります。\n");
+                log_error_csv(LOG_CSV_FILE,
+                              make_error_log("補充不正", "在庫上限超過または不正な入力値のため補充を中止しました。"));
             }
         } else if (menu == 2) {
             int i;
