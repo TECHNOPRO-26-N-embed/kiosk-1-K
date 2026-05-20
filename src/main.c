@@ -73,6 +73,7 @@ static const int g_denominations[DENOM_COUNT] = {10, 50, 100, 500, 1000};
 static TransactionState g_tx;
 static SaleData g_last_sale;
 static int g_has_last_sale = 0;
+static int g_shutdown_requested = 0;
 
 /* 詳細設計書で定義された関数宣言。 */
 void init_products(void);
@@ -133,6 +134,9 @@ static int utf8_display_width(const char *s);
 
 /* UTF-8文字列を表示幅 max_width 以内で切り詰める。 */
 static void utf8_truncate_display_width(const char *src, int max_width, char *dst, size_t dst_size);
+
+/* 00入力による終了要求状態を返す。 */
+static int is_shutdown_requested(void);
 
 /* WindowsコンソールをUTF-8入出力へ設定する。 */
 static void configure_console_utf8(void) {
@@ -333,6 +337,7 @@ void show_main_menu(void) {
     printf("\n=== メインメニュー ===\n");
     printf("1. 購入を開始する\n");
     printf("0. 終了\n");
+    printf("00. 即時終了\n");
     printf("選択してください: ");
 }
 
@@ -383,13 +388,23 @@ int read_int_safe(void) {
     long v;
 
     while (1) {
+        if (is_shutdown_requested()) {
+            return 0;
+        }
+
         if (fgets(buf, sizeof(buf), stdin) == NULL) {
+            g_shutdown_requested = 1;
             return 0;
         }
         trim_newline(buf);
 
+        if (strcmp(buf, "00") == 0) {
+            g_shutdown_requested = 1;
+            return 0;
+        }
+
         if (buf[0] == '\0') {
-            printf("数値を入力してください: ");
+            printf("数値を入力してください（00で終了）: ");
             continue;
         }
 
@@ -398,7 +413,7 @@ int read_int_safe(void) {
             return (int)v;
         }
 
-        printf("不正な入力です。再入力してください: ");
+        printf("不正な入力です。再入力してください（00で終了）: ");
     }
 }
 
@@ -406,8 +421,11 @@ int read_int_safe(void) {
 int input_product_no(void) {
     int product_id;
     while (1) {
-        printf("商品番号を入力してください (1-%d): ", MAX_PRODUCTS);
+        printf("商品番号を入力してください (1-%d / 00で終了): ", MAX_PRODUCTS);
         product_id = read_int_safe();
+        if (is_shutdown_requested()) {
+            return 0;
+        }
         if (product_id < 1 || product_id > MAX_PRODUCTS) {
             printf("範囲外です。\n");
             continue;
@@ -426,8 +444,11 @@ int input_quantity(void) {
     int product_id = g_tx.selected_product_id;
 
     while (1) {
-        printf("購入数量を入力してください (1-%d): ", g_products[product_id - 1].stock);
+        printf("購入数量を入力してください (1-%d / 00で終了): ", g_products[product_id - 1].stock);
         quantity = read_int_safe();
+        if (is_shutdown_requested()) {
+            return 0;
+        }
         if (quantity < 1) {
             printf("数量は1以上にしてください。\n");
             continue;
@@ -446,8 +467,11 @@ int *input_money_counts(void) {
     int i;
 
     for (i = 0; i < DENOM_COUNT; i++) {
-        printf("%d円の投入枚数を入力してください: ", g_denominations[i]);
+        printf("%d円の投入枚数を入力してください（00で終了）: ", g_denominations[i]);
         counts[i] = read_int_safe();
+        if (is_shutdown_requested()) {
+            return counts;
+        }
         if (counts[i] < 0) {
             counts[i] = 0;
         }
@@ -757,22 +781,36 @@ int ensure_csv_headers(const char *filename, const char *headers) {
 /* 管理者向けの補充処理と金種状態表示を実行する。 */
 void handle_admin_menu(void) {
     int done = 0;
-    while (!done) {
+    while (!done && !is_shutdown_requested()) {
         int menu;
         printf("\n=== 管理者メニュー ===\n");
         printf("1. 商品を補充\n");
         printf("2. 自販機内金種を表示\n");
         printf("0. 戻る\n");
+        printf("00. 即時終了\n");
         printf("選択してください: ");
         menu = read_int_safe();
+
+        if (is_shutdown_requested()) {
+            done = 1;
+            continue;
+        }
 
         if (menu == 1) {
             int product_id;
             int qty;
-            printf("補充する商品番号: ");
+            printf("補充する商品番号（00で終了）: ");
             product_id = read_int_safe();
-            printf("補充数量: ");
+            if (is_shutdown_requested()) {
+                done = 1;
+                continue;
+            }
+            printf("補充数量（00で終了）: ");
             qty = read_int_safe();
+            if (is_shutdown_requested()) {
+                done = 1;
+                continue;
+            }
             if (restock_product(product_id, qty) == 0) {
                 printf("補充が完了しました。\n");
                 log_operation_csv(LOG_CSV_FILE,
@@ -800,16 +838,21 @@ void handle_admin_menu(void) {
 void run_vending_machine(void) {
     int running = 1;
 
-    while (running) {
+    while (running && !is_shutdown_requested()) {
         int choice;
         show_product_list();
         show_main_menu();
         choice = read_int_safe();
 
+        if (is_shutdown_requested()) {
+            running = 0;
+            break;
+        }
+
         if (choice == 1) {
             start_transaction();
 
-            while (g_tx.active) {
+            while (g_tx.active && !is_shutdown_requested()) {
                 int input_menu;
                 int add_amount = 0;
                 int money_counts[DENOM_COUNT] = {0, 0, 0, 0, 0};
@@ -824,8 +867,14 @@ void run_vending_machine(void) {
                 printf("5. 1000円投入\n");
                 printf("6. 商品購入へ進む\n");
                 printf("0. 取引キャンセル（返金して終了）\n");
+                printf("00. 即時終了\n");
                 printf("選択してください: ");
                 input_menu = read_int_safe();
+
+                if (is_shutdown_requested()) {
+                    payout_and_end_transaction("利用者が00入力で終了しました。");
+                    break;
+                }
 
                 if (input_menu == 0) {
                     payout_and_end_transaction("利用者が取引をキャンセルしました。");
@@ -837,7 +886,7 @@ void run_vending_machine(void) {
                         continue;
                     }
 
-                    while (g_tx.active) {
+                    while (g_tx.active && !is_shutdown_requested()) {
                         int product_id;
                         int min_price;
 
@@ -858,8 +907,13 @@ void run_vending_machine(void) {
                             break;
                         }
 
-                        printf("商品番号を入力してください（0:終了して返金 / 51:取引キャンセル）: ");
+                        printf("商品番号を入力してください（0:終了して返金 / 51:取引キャンセル / 00:即時終了）: ");
                         product_id = read_int_safe();
+
+                        if (is_shutdown_requested()) {
+                            payout_and_end_transaction("利用者が00入力で終了しました。");
+                            break;
+                        }
 
                         if (product_id == 0) {
                             payout_and_end_transaction("利用者が終了を選択しました。");
@@ -919,6 +973,11 @@ void run_vending_machine(void) {
                           make_error_log("不正メニュー", "未定義のメニュー番号が選択されました。"));
         }
     }
+}
+
+/* 00入力による終了要求状態を返す。 */
+static int is_shutdown_requested(void) {
+    return g_shutdown_requested;
 }
 
 /* 在庫があり、かつ購入対象となる商品の最安価格を返す。 */
