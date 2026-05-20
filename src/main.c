@@ -110,6 +110,12 @@ int ensure_csv_headers(const char *filename, const char *headers);
 void run_vending_machine(void);
 void handle_admin_menu(void);
 
+/* 現在購入可能な商品の最安価格を返す。購入不能時は-1を返す。 */
+static int get_min_available_price(void);
+
+/* 取引終了時に残高を返金し、取引状態を終了させる。 */
+static void payout_and_end_transaction(const char *reason);
+
 /* ログ・CSV出力用の現在時刻文字列を生成する。 */
 static void get_now_timestamp(char *buf, size_t size) {
     time_t now = time(NULL);
@@ -299,10 +305,7 @@ int restock_product(int product_id, int quantity) {
 /* 購入処理と管理処理のメインメニューを表示する。 */
 void show_main_menu(void) {
     printf("\n=== メインメニュー ===\n");
-    printf("1. 商品を購入\n");
-    printf("2. お金を投入\n");
-    printf("3. 取引をキャンセル\n");
-    printf("4. 管理者メニュー\n");
+    printf("1. 購入を開始する\n");
     printf("0. 終了\n");
     printf("選択してください: ");
 }
@@ -495,19 +498,17 @@ void start_transaction(void) {
 int process_purchase(int product_id, int quantity, int balance) {
     Product *p;
     int total_price;
-    int change_amount;
-    int *change_counts;
     SaleData sale;
 
+    (void)quantity;
+
     if (product_id < 1 || product_id > MAX_PRODUCTS) {
-        product_id = input_product_no();
+        printf("商品番号が不正です。\n");
+        return -1;
     }
 
     g_tx.selected_product_id = product_id;
-
-    if (quantity <= 0) {
-        quantity = input_quantity();
-    }
+    quantity = 1;
 
     p = &g_products[product_id - 1];
     total_price = calc_total_price(p->price, quantity);
@@ -518,23 +519,11 @@ int process_purchase(int product_id, int quantity, int balance) {
         return -1;
     }
 
-    change_amount = calc_change_amount(balance, total_price);
-    if (!can_make_change(change_amount)) {
-        printf("正確な釣銭を返却できないため、購入を中止しました。\n");
-        log_error_csv(LOG_CSV_FILE, make_error_log("釣銭不足", "正確な釣銭を返せません。"));
-        log_fault_prediction_csv(LOG_CSV_FILE,
-                                 make_fault_log("釣銭リスク", 80, "釣銭用金種の在庫が不足しています。"));
-        return -1;
-    }
-
     if (reduce_stock(product_id, quantity) != 0) {
         printf("在庫更新に失敗しました。\n");
         log_error_csv(LOG_CSV_FILE, make_error_log("在庫更新失敗", "在庫の更新処理に失敗しました。"));
         return -1;
     }
-
-    change_counts = make_change_breakdown(change_amount);
-    apply_change_payout(change_counts);
 
     get_now_timestamp(sale.timestamp, sizeof(sale.timestamp));
     sale.product_id = p->id;
@@ -543,7 +532,7 @@ int process_purchase(int product_id, int quantity, int balance) {
     sale.unit_price = p->price;
     sale.total_price = total_price;
     sale.inserted_amount = balance;
-    sale.change_amount = change_amount;
+    sale.change_amount = 0;
 
     g_last_sale = sale;
     g_has_last_sale = 1;
@@ -552,14 +541,13 @@ int process_purchase(int product_id, int quantity, int balance) {
     log_money_csv(LOG_CSV_FILE, g_machine_money);
 
     printf("商品を払い出します: %s x %d\n", p->name, quantity);
-    printf("合計: %d 円, 釣銭: %d 円\n", total_price, change_amount);
+    printf("購入金額: %d 円\n", total_price);
 
-    g_tx.balance = 0;
+    g_tx.balance = calc_change_amount(balance, total_price);
     g_tx.quantity = quantity;
     g_tx.total_price = total_price;
 
     finish_transaction();
-    reset_for_next_customer();
     return 0;
 }
 
@@ -574,7 +562,7 @@ void cancel_transaction(int balance) {
 /* 取引完了時の通知やログ記録を行う。 */
 void finish_transaction(void) {
     if (g_has_last_sale) {
-        printf("取引が完了しました。\n");
+        printf("購入処理が完了しました。\n");
         log_operation_csv(LOG_CSV_FILE,
                           make_operation_log("購入完了", "購入処理が正常終了しました。"));
     }
@@ -766,56 +754,117 @@ void handle_admin_menu(void) {
 /* 複数顧客が連続利用できる自販機メインループを実行する。 */
 void run_vending_machine(void) {
     int running = 1;
-    start_transaction();
 
     while (running) {
         int choice;
-
-        /* 要件に従い、商品一覧は状態に関係なく毎サイクル表示する。 */
-        show_product_list();
-        show_current_balance(g_tx.balance);
         show_main_menu();
-
         choice = read_int_safe();
 
         if (choice == 1) {
-            if (g_tx.balance <= 0) {
-                printf("先にお金を投入してください。\n");
-                log_error_csv(LOG_CSV_FILE,
-                              make_error_log("残高なし", "残高0円で購入が要求されました。"));
-                continue;
-            }
-            process_purchase(-1, -1, g_tx.balance);
             start_transaction();
-        } else if (choice == 2) {
-            int *counts = input_money_counts();
-            int inserted = calc_inserted_amount(counts);
 
-            if (inserted <= 0) {
-                printf("投入金額が0円です。\n");
-                continue;
-            }
-            if (!limit_max_money(g_tx.balance + inserted)) {
-                printf("最大投入可能額(%d円)を超えました。\n", MAX_BALANCE);
-                log_error_csv(LOG_CSV_FILE,
-                              make_error_log("投入上限超過", "投入額が上限を超えました。"));
-                continue;
+            while (g_tx.active) {
+                int input_menu;
+                int add_amount = 0;
+                int money_counts[DENOM_COUNT] = {0, 0, 0, 0, 0};
+
+                printf("\n=== 金額投入画面 ===\n");
+                show_current_balance(g_tx.balance);
+                printf("1. 10円投入\n");
+                printf("2. 50円投入\n");
+                printf("3. 100円投入\n");
+                printf("4. 500円投入\n");
+                printf("5. 1000円投入\n");
+                printf("6. 商品購入へ進む\n");
+                printf("0. 取引キャンセル（返金して終了）\n");
+                printf("選択してください: ");
+                input_menu = read_int_safe();
+
+                if (input_menu == 0) {
+                    payout_and_end_transaction("利用者が取引をキャンセルしました。");
+                    break;
+                }
+                if (input_menu == 6) {
+                    if (g_tx.balance <= 0) {
+                        printf("先にお金を投入してください。\n");
+                        continue;
+                    }
+
+                    while (g_tx.active) {
+                        int product_id;
+                        int min_price;
+
+                        /* 要件に従い、商品一覧は状態に関係なく継続表示する。 */
+                        show_product_list();
+                        show_current_balance(g_tx.balance);
+
+                        min_price = get_min_available_price();
+                        if (min_price < 0) {
+                            printf("購入可能な商品がありません。返金して終了します。\n");
+                            payout_and_end_transaction("全商品売り切れのため取引終了。");
+                            break;
+                        }
+
+                        if (g_tx.balance < min_price) {
+                            printf("投入金額では購入可能な商品がありません。返金して終了します。\n");
+                            payout_and_end_transaction("残高不足により取引終了。");
+                            break;
+                        }
+
+                        printf("商品番号を入力してください（0:終了して返金 / 51:取引キャンセル）: ");
+                        product_id = read_int_safe();
+
+                        if (product_id == 0) {
+                            payout_and_end_transaction("利用者が終了を選択しました。");
+                            break;
+                        }
+                        if (product_id == 51) {
+                            payout_and_end_transaction("利用者が取引キャンセルを選択しました。");
+                            break;
+                        }
+
+                        if (product_id < 1 || product_id > MAX_PRODUCTS) {
+                            printf("商品番号が範囲外です。\n");
+                            continue;
+                        }
+                        if (is_sold_out(product_id)) {
+                            printf("選択した商品は売り切れです。\n");
+                            continue;
+                        }
+
+                        if (process_purchase(product_id, 1, g_tx.balance) != 0) {
+                            printf("購入処理に失敗しました。\n");
+                            continue;
+                        }
+                    }
+                    break;
+                }
+
+                if (input_menu >= 1 && input_menu <= 5) {
+                    add_amount = g_denominations[input_menu - 1];
+
+                    if (!limit_max_money(g_tx.balance + add_amount)) {
+                        printf("投入上限(%d円)を超えるため、この入力は受け付けません。\n", MAX_BALANCE);
+                        log_error_csv(LOG_CSV_FILE,
+                                      make_error_log("投入上限超過", "上限超過分の投入を拒否しました。"));
+                        continue;
+                    }
+
+                    money_counts[input_menu - 1] = 1;
+                    add_money_to_machine(money_counts);
+                    g_tx.balance += add_amount;
+                    printf("%d円を投入しました。\n", add_amount);
+                    show_current_balance(g_tx.balance);
+                    log_operation_csv(LOG_CSV_FILE,
+                                      make_operation_log("金額投入", "利用者が金額を投入しました。"));
+                    continue;
+                }
+
+                printf("選択が不正です。\n");
             }
 
-            add_money_to_machine(counts);
-            g_tx.balance += inserted;
-            log_operation_csv(LOG_CSV_FILE,
-                              make_operation_log("金額投入", "利用者がお金を投入しました。"));
-            printf("投入金額: %d 円\n", inserted);
-        } else if (choice == 3) {
-            cancel_transaction(g_tx.balance);
             start_transaction();
-        } else if (choice == 4) {
-            handle_admin_menu();
         } else if (choice == 0) {
-            if (g_tx.balance > 0) {
-                cancel_transaction(g_tx.balance);
-            }
             running = 0;
         } else {
             printf("メニューの選択が不正です。\n");
@@ -823,6 +872,52 @@ void run_vending_machine(void) {
                           make_error_log("不正メニュー", "未定義のメニュー番号が選択されました。"));
         }
     }
+}
+
+/* 在庫があり、かつ購入対象となる商品の最安価格を返す。 */
+static int get_min_available_price(void) {
+    int i;
+    int min_price = -1;
+    for (i = 0; i < MAX_PRODUCTS; i++) {
+        if (g_products[i].stock > 0) {
+            if (min_price < 0 || g_products[i].price < min_price) {
+                min_price = g_products[i].price;
+            }
+        }
+    }
+    return min_price;
+}
+
+/* 返金可能なら釣銭を払い出し、取引を終了する。 */
+static void payout_and_end_transaction(const char *reason) {
+    int change_amount = g_tx.balance;
+    int *change_counts;
+
+    if (reason != NULL) {
+        log_operation_csv(LOG_CSV_FILE, make_operation_log("取引終了", reason));
+    }
+
+    if (change_amount <= 0) {
+        printf("返金はありません。\n");
+        reset_for_next_customer();
+        return;
+    }
+
+    if (!can_make_change(change_amount)) {
+        printf("正確な釣銭を返却できません。管理者へ連絡してください。\n");
+        log_error_csv(LOG_CSV_FILE,
+                      make_error_log("返金失敗", "釣銭不足で返金できませんでした。"));
+        log_fault_prediction_csv(LOG_CSV_FILE,
+                                 make_fault_log("釣銭リスク", 95, "返金用金種が不足しています。"));
+        reset_for_next_customer();
+        return;
+    }
+
+    change_counts = make_change_breakdown(change_amount);
+    apply_change_payout(change_counts);
+    printf("返金額: %d 円\n", change_amount);
+    log_money_csv(LOG_CSV_FILE, g_machine_money);
+    reset_for_next_customer();
 }
 
 /* エントリポイント。初期化→読込→メインループ→保存の順に実行する。 */
