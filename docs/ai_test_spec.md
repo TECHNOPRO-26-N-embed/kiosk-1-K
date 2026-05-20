@@ -4,42 +4,42 @@
 
 | テストケースID | 対象関数             | テスト内容                                   | 結果 |
 |----------------|----------------------|----------------------------------------------|-------|
-| TC-001         | `init_products`      | 商品情報が正しく初期化されるか               | [ ]   |
-| TC-002         | `load_products_from_csv` | CSVファイルから商品情報が正しく読み込まれるか | [ ]   |
-| TC-003         | `save_products_to_csv` | 商品情報がCSVファイルに正しく保存されるか     | [ ]   |
-| TC-004         | `is_sold_out`        | 指定商品の在庫が0か正しく判定するか          | [ ]   |
-| TC-005         | `reduce_stock`       | 購入確定時に在庫が正しく減算されるか         | [ ]   |
-| TC-006         | `restock_product`    | 在庫補充が正しく行われるか                   | [ ]   |
-| TC-007         | `show_main_menu`     | メインメニューが正しく表示されるか           | [ ]   |
-| TC-008         | `show_product_list`  | 商品リストが正しく表示されるか               | [ ]   |
-| TC-009         | `show_current_balance` | 現在の投入金額が正しく表示されるか           | [ ]   |
-| TC-010         | `read_int_safe`      | 整数入力が安全に受け取れるか                 | [ ]   |
-| TC-011         | `input_product_no`   | 商品番号が正しく入力されるか                 | [ ]   |
-| TC-012         | `input_quantity`     | 購入数量が正しく入力されるか                 | [ ]   |
-| TC-013         | `input_money_counts` | 各金種の投入枚数が正しく入力されるか         | [ ]   |
-| TC-014         | `calc_inserted_amount` | 投入金額が正しく計算されるか                 | [ ]   |
-| TC-015         | `add_money_to_machine` | 投入金額が自販機内に正しく加算されるか       | [ ]   |
-| TC-016         | `limit_max_money`    | 最大投入金額制限が正しく動作するか           | [ ]   |
-| TC-017         | `can_afford`         | 残高が購入金額以上か正しく判定するか         | [ ]   |
-| TC-018         | `calc_total_price`   | 購入金額が正しく計算されるか                 | [ ]   |
-| TC-019         | `calc_change_amount` | 釣銭額が正しく計算されるか                   | [ ]   |
-| TC-020         | `can_make_change`    | 釣銭が正しく返せるか判定するか               | [ ]   |
-| TC-021         | `make_change_breakdown` | 釣銭額が金種別に正しく分解されるか          | [ ]   |
-| TC-022         | `apply_change_payout` | 釣銭払い出し後に金種枚数が正しく減算されるか | [ ]   |
-| TC-023         | `start_transaction`  | 取引状態が正しく初期化されるか               | [ ]   |
-| TC-024         | `process_purchase`   | 購入処理が正しく行われるか                   | [ ]   |
-| TC-025         | `cancel_transaction` | キャンセル時に全額返金されるか               | [ ]   |
-| TC-026         | `finish_transaction` | 取引完了処理が正しく行われるか               | [ ]   |
-| TC-027         | `reset_for_next_customer` | 次顧客のために状態が正しくリセットされるか | [ ]   |
-| TC-028         | `log_sale_csv`       | 売上情報がCSVに正しく記録されるか            | [ ]   |
-| TC-029         | `log_money_csv`      | 金種別残り枚数がCSVに正しく記録されるか      | [ ]   |
-| TC-030         | `log_operation_csv`  | 操作ログがCSVに正しく記録されるか            | [ ]   |
-| TC-031         | `log_error_csv`      | 異常系ログがCSVに正しく記録されるか          | [ ]   |
-| TC-032         | `log_fault_prediction_csv` | 故障予兆データがCSVに正しく記録されるか    | [ ]   |
-| TC-033         | `ensure_csv_headers` | CSVファイルにヘッダ行が正しく出力されるか    | [ ]   |
-| TC-034         | `run_vending_machine` | メインループが正しく動作するか               | [ ]   |
-| TC-035         | `handle_admin_menu`  | 管理者メニューが正しく動作するか             | [ ]   |
-| TC-036         | `main`               | システム全体が正しく動作するか               | [ ]   |
+| TC-001         | `init_products`      | 商品情報が正しく初期化されるか               | [○]   |
+| TC-002         | `load_products_from_csv` | CSVファイルから商品情報が正しく読み込まれるか | [○]   |
+| TC-003         | `save_products_to_csv` | 商品情報がCSVファイルに正しく保存されるか     | [○]   |
+| TC-004         | `is_sold_out`        | 指定商品の在庫が0か正しく判定するか          | [○]   |
+| TC-005         | `reduce_stock`       | 購入確定時に在庫が正しく減算されるか         | [○]   |
+| TC-006         | `restock_product`    | 在庫補充が正しく行われるか                   | [○]   |
+| TC-007         | `show_main_menu`     | メインメニューが正しく表示されるか           | [○]   |
+| TC-008         | `show_product_list`  | 商品リストが正しく表示されるか               | [○]   |
+| TC-009         | `show_current_balance` | 現在の投入金額が正しく表示されるか           | [○]   |
+| TC-010         | `read_int_safe`      | 整数入力が安全に受け取れるか                 | [○]   |
+| TC-011         | `input_product_no`   | 商品番号が正しく入力されるか                 | [○]   |
+| TC-012         | `input_quantity`     | 購入数量が正しく入力されるか                 | [○]   |
+| TC-013         | `input_money_counts` | 各金種の投入枚数が正しく入力されるか         | [○]   |
+| TC-014         | `calc_inserted_amount` | 投入金額が正しく計算されるか                 | [○]   |
+| TC-015         | `add_money_to_machine` | 投入金額が自販機内に正しく加算されるか       | [○]   |
+| TC-016         | `limit_max_money`    | 最大投入金額制限が正しく動作するか           | [○]   |
+| TC-017         | `can_afford`         | 残高が購入金額以上か正しく判定するか         | [○]   |
+| TC-018         | `calc_total_price`   | 購入金額が正しく計算されるか                 | [○]   |
+| TC-019         | `calc_change_amount` | 釣銭額が正しく計算されるか                   | [○]   |
+| TC-020         | `can_make_change`    | 釣銭が正しく返せるか判定するか               | [○]   |
+| TC-021         | `make_change_breakdown` | 釣銭額が金種別に正しく分解されるか          | [○]   |
+| TC-022         | `apply_change_payout` | 釣銭払い出し後に金種枚数が正しく減算されるか | [○]   |
+| TC-023         | `start_transaction`  | 取引状態が正しく初期化されるか               | [○]   |
+| TC-024         | `process_purchase`   | 購入処理が正しく行われるか                   | [○]   |
+| TC-025         | `cancel_transaction` | キャンセル時に全額返金されるか               | [○]   |
+| TC-026         | `finish_transaction` | 取引完了処理が正しく行われるか               | [○]   |
+| TC-027         | `reset_for_next_customer` | 次顧客のために状態が正しくリセットされるか | [○]   |
+| TC-028         | `log_sale_csv`       | 売上情報がCSVに正しく記録されるか            | [○]   |
+| TC-029         | `log_money_csv`      | 金種別残り枚数がCSVに正しく記録されるか      | [○]   |
+| TC-030         | `log_operation_csv`  | 操作ログがCSVに正しく記録されるか            | [○]   |
+| TC-031         | `log_error_csv`      | 異常系ログがCSVに正しく記録されるか          | [○]   |
+| TC-032         | `log_fault_prediction_csv` | 故障予兆データがCSVに正しく記録されるか    | [○]   |
+| TC-033         | `ensure_csv_headers` | CSVファイルにヘッダ行が正しく出力されるか    | [○]   |
+| TC-034         | `run_vending_machine` | メインループが正しく動作するか               | [○]   |
+| TC-035         | `handle_admin_menu`  | 管理者メニューが正しく動作するか             | [○]   |
+| TC-036         | `main`               | システム全体が正しく動作するか               | [○]   |
 
 ---
 
