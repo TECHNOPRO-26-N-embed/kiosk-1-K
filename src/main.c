@@ -9,6 +9,8 @@
 #define MAX_BALANCE 5000
 #define DENOM_COUNT 5
 #define INPUT_BUF 256
+#define PRODUCT_COLS 5
+#define PRODUCT_CELL_WIDTH 14
 
 #define PRODUCT_CSV_FILE "docs/menu.csv"
 #define LOG_CSV_FILE "data/data.csv"
@@ -115,6 +117,9 @@ static int get_min_available_price(void);
 
 /* 取引終了時に残高を返金し、取引状態を終了させる。 */
 static void payout_and_end_transaction(const char *reason);
+
+/* 固定幅セル内に文字列を中央寄せで表示する。 */
+static void print_center_cell(const char *text, int width);
 
 /* ログ・CSV出力用の現在時刻文字列を生成する。 */
 static void get_now_timestamp(char *buf, size_t size) {
@@ -312,17 +317,36 @@ void show_main_menu(void) {
 
 /* 売り切れ状態を含む商品一覧を表示する。 */
 void show_product_list(void) {
-    int i;
-    printf("\n=== 商品一覧（常時表示）===\n");
-    printf("番号 | 商品名    | 価格  | 在庫  | 状態\n");
-    printf("-----+-----------+-------+-------+--------\n");
-    for (i = 0; i < MAX_PRODUCTS; i++) {
-        printf("%3d | %-9s | %5d | %5d | %s\n",
-               g_products[i].id,
-               g_products[i].name,
-               g_products[i].price,
-               g_products[i].stock,
-               (g_products[i].stock <= 0) ? "売り切れ" : "販売中");
+    int row;
+    for (row = 0; row < (MAX_PRODUCTS / PRODUCT_COLS); row++) {
+        int col;
+        char buf[32];
+
+        for (col = 0; col < PRODUCT_COLS; col++) {
+            int idx = row * PRODUCT_COLS + col;
+            print_center_cell(g_products[idx].name, PRODUCT_CELL_WIDTH);
+        }
+        printf("\n");
+
+        for (col = 0; col < PRODUCT_COLS; col++) {
+            int idx = row * PRODUCT_COLS + col;
+            snprintf(buf, sizeof(buf), "%d", g_products[idx].id);
+            print_center_cell(buf, PRODUCT_CELL_WIDTH);
+        }
+        printf("\n");
+
+        for (col = 0; col < PRODUCT_COLS; col++) {
+            int idx = row * PRODUCT_COLS + col;
+            snprintf(buf, sizeof(buf), "%d", g_products[idx].price);
+            print_center_cell(buf, PRODUCT_CELL_WIDTH);
+        }
+        printf("\n");
+
+        for (col = 0; col < PRODUCT_COLS; col++) {
+            int idx = row * PRODUCT_COLS + col;
+            print_center_cell((g_products[idx].stock <= 0) ? "売り切れ" : "販売中", PRODUCT_CELL_WIDTH);
+        }
+        printf("\n\n");
     }
 }
 
@@ -757,6 +781,7 @@ void run_vending_machine(void) {
 
     while (running) {
         int choice;
+        show_product_list();
         show_main_menu();
         choice = read_int_safe();
 
@@ -768,6 +793,7 @@ void run_vending_machine(void) {
                 int add_amount = 0;
                 int money_counts[DENOM_COUNT] = {0, 0, 0, 0, 0};
 
+                show_product_list();
                 printf("\n=== 金額投入画面 ===\n");
                 show_current_balance(g_tx.balance);
                 printf("1. 10円投入\n");
@@ -892,6 +918,7 @@ static int get_min_available_price(void) {
 static void payout_and_end_transaction(const char *reason) {
     int change_amount = g_tx.balance;
     int *change_counts;
+    int i;
 
     if (reason != NULL) {
         log_operation_csv(LOG_CSV_FILE, make_operation_log("取引終了", reason));
@@ -916,8 +943,29 @@ static void payout_and_end_transaction(const char *reason) {
     change_counts = make_change_breakdown(change_amount);
     apply_change_payout(change_counts);
     printf("返金額: %d 円\n", change_amount);
+    printf("返金内訳:　");
+    for (i = DENOM_COUNT - 1; i >= 0; i--) {
+        printf("%4d円: %d枚　", g_denominations[i], change_counts[i]);
+    }
     log_money_csv(LOG_CSV_FILE, g_machine_money);
     reset_for_next_customer();
+    printf("\n\n");
+}
+
+/* 固定幅セル内に文字列を中央寄せで表示する。 */
+static void print_center_cell(const char *text, int width) {
+    int len = (int)strlen(text);
+    int left;
+    int right;
+
+    if (len >= width) {
+        printf("%.*s", width, text);
+        return;
+    }
+
+    left = (width - len) / 2;
+    right = width - len - left;
+    printf("%*s%s%*s", left, "", text, right, "");
 }
 
 /* エントリポイント。初期化→読込→メインループ→保存の順に実行する。 */
